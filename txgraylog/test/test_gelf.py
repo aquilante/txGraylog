@@ -5,7 +5,7 @@
 Tests for :class: `~txgraylog.gelf.GelfProtocol`
 """
 import time
-import json
+import jsonlib as json
 import zlib
 import struct
 import binascii
@@ -34,7 +34,7 @@ class TestGELF(unittest.TestCase):
 
         self.assertEquals(len(g.generate()), 1)
 
-        params = json.loads(zlib.decompress(g.generate()[0]))
+        params = json.read(zlib.decompress(g.generate()[0]), use_float=True)
 
         self.assertEquals(params['facility'], 'protocol')
         self.assertEquals(params['short_message'], 'this is a log message')
@@ -60,7 +60,7 @@ class TestGELF(unittest.TestCase):
         })
 
         for message in g:
-            params = json.loads(zlib.decompress(g.generate()[0]))
+            params = json.read(zlib.decompress(g.generate()[0]), use_float=True)
 
             self.assertEquals(params['facility'], 'protocol')
             self.assertEquals(params['short_message'], 'this is a log message')
@@ -85,7 +85,7 @@ class TestGELF(unittest.TestCase):
             'bar': 'baz'
         })
 
-        params = json.loads(zlib.decompress(g.generate()[0]))
+        params = json.read(zlib.decompress(g.generate()[0]), use_float=True)
 
         self.assertEquals(params['_username'], 'foo')
         self.assertEquals(params['_bar'], 'baz')
@@ -102,7 +102,7 @@ class TestGELF(unittest.TestCase):
             'time': time.time(),
         })
 
-        params = json.loads(zlib.decompress(g.generate()[0]))
+        params = json.read(zlib.decompress(g.generate()[0]), use_float=True)
 
         self.assertEquals(params['level'], 3)
         self.assertEquals(params['short_message'], 'foo')
@@ -113,7 +113,7 @@ class TestGELF(unittest.TestCase):
         """
 
         longMessage = binascii.hexlify(
-            randbytes.insecureRandom(3000)) + 'more!'
+            randbytes.insecureRandom(3000)) + b'more!'
 
         g = GelfProtocol('localhost', **{
             'system': 'protocol',
@@ -125,15 +125,15 @@ class TestGELF(unittest.TestCase):
         messages = g.generate()
 
         self.failUnless(len(messages) > 1)
-        self.failUnless(messages[0].startswith('\x1e\x0f'))
+        self.failUnless(messages[0].startswith(b'\x1e\x0f'))
 
         old_id = None
-        for i in xrange(len(messages)):
+        for i in range(len(messages)):
             magic, chunk_id, seq, num_chunks = struct.unpack(
-                '>2s32sHH', messages[i][:38]
+                b'>2s32sHH', messages[i][:38]
             )
 
-            self.assertEquals(magic, '\x1e\x0f')
+            self.assertEquals(magic, b'\x1e\x0f')
             self.assertEquals(seq, i)
             self.assertEquals(num_chunks, len(messages))
 
@@ -148,7 +148,7 @@ class TestGELF(unittest.TestCase):
         from txgraylog.protocol.gelf import LAN_CHUNK
 
         longMessage = binascii.hexlify(
-            randbytes.insecureRandom(9000)) + 'more!'
+            randbytes.insecureRandom(9000)) + b'more!'
 
         g = GelfProtocol('localhost', size=LAN_CHUNK, **{
             'system': 'protocol',
@@ -160,15 +160,15 @@ class TestGELF(unittest.TestCase):
         messages = g.generate()
 
         self.failUnless(len(messages) > 1)
-        self.failUnless(messages[0].startswith('\x1e\x0f'))
+        self.failUnless(messages[0].startswith(b'\x1e\x0f'))
 
         old_id = None
-        for i in xrange(len(messages)):
+        for i in range(len(messages)):
             magic, chunk_id, seq, num_chunks = struct.unpack(
-                '>2s32sHH', messages[i][:38]
+                b'>2s32sHH', messages[i][:38]
             )
 
-            self.assertEquals(magic, '\x1e\x0f')
+            self.assertEquals(magic, b'\x1e\x0f')
             self.assertEquals(seq, i)
             self.assertEquals(num_chunks, len(messages))
 
@@ -183,7 +183,7 @@ class TestGELF(unittest.TestCase):
         from txgraylog.protocol.gelf import GELF_NEW
 
         longMessage = binascii.hexlify(
-            randbytes.insecureRandom(3000)) + 'more!'
+            randbytes.insecureRandom(3000)) + b'more!'
 
         g = GelfProtocol('host', gelf_fmt=GELF_NEW, **{
                 'system': 'protocol',
@@ -195,15 +195,15 @@ class TestGELF(unittest.TestCase):
         messages = g.generate()
 
         self.failUnless(len(messages) > 1)
-        self.failUnless(messages[0].startswith('\x1e\x0f'))
+        self.failUnless(messages[0].startswith(b'\x1e\x0f'))
 
         old_id = None
-        for i in xrange(len(messages)):
+        for i in range(len(messages)):
             magic, chunk_id, seq, num_chunks = struct.unpack(
-                '2s8sBB', messages[i][:12]
+                b'2s8sBB', messages[i][:12]
             )
 
-            self.assertEquals(magic, '\x1e\x0f')
+            self.assertEquals(magic, b'\x1e\x0f')
             self.assertEquals(seq, i)
             self.assertEquals(num_chunks, len(messages))
 
@@ -218,7 +218,7 @@ class TestGELF(unittest.TestCase):
         from txgraylog.protocol.gelf import GELF_NEW, LAN_CHUNK
 
         longMessage = binascii.hexlify(
-            randbytes.insecureRandom(9000)) + 'more!'
+            randbytes.insecureRandom(9000)) + b'more!'
 
         data = {
             'system': 'protocol',
@@ -232,15 +232,15 @@ class TestGELF(unittest.TestCase):
         ).generate()
 
         self.failUnless(len(messages) > 1)
-        self.failUnless(messages[0].startswith('\x1e\x0f'))
+        self.failUnless(messages[0].startswith(b'\x1e\x0f'))
 
         old_id = None
-        for i in xrange(len(messages)):
+        for i in range(len(messages)):
             magic, chunk_id, seq, num_chunks = struct.unpack(
-                '2s8sBB', messages[i][:12]
+                b'2s8sBB', messages[i][:12]
             )
 
-            self.assertEquals(magic, '\x1e\x0f')
+            self.assertEquals(magic, b'\x1e\x0f')
             self.assertEquals(seq, i)
             self.assertEquals(num_chunks, len(messages))
 
@@ -254,7 +254,7 @@ class TestGELF(unittest.TestCase):
         """
 
         longMessage = binascii.hexlify(
-            randbytes.insecureRandom(3000)) + 'more!'
+            randbytes.insecureRandom(3000)) + b'more!'
 
         g = GelfProtocol('localhost', **{
             'system': 'protocol',
@@ -264,14 +264,14 @@ class TestGELF(unittest.TestCase):
         })
 
         for index, message in enumerate(g):
-            self.failUnless(message.startswith('\x1e\x0f'))
+            self.failUnless(message.startswith(b'\x1e\x0f'))
 
             old_id = None
             magic, chunk_id, seq, num_chunks = struct.unpack(
                 '>2s32sHH', message[:38]
             )
 
-            self.assertEquals(magic, '\x1e\x0f')
+            self.assertEquals(magic, b'\x1e\x0f')
             self.assertEquals(seq, index)
 
             if old_id:

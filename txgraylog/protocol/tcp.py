@@ -13,7 +13,7 @@ from socket import gethostname
 
 from twisted.internet.protocol import Protocol, ReconnectingClientFactory
 
-from gelf import GelfProtocol
+from . gelf import GelfProtocol
 
 
 class TCPPlainTextProtocol(Protocol):
@@ -54,9 +54,9 @@ class TCPPlainTextProtocol(Protocol):
     def send_to_graylog(self, message):
         """ Write the data to socket
         """
-        message = str(message)
-        if not message.endswith('\x00'):
-            message += '\x00'
+        message = message
+        if not message.endswith(b'\x00'):
+            message += b'\x00'
 
         if not self.connected:
             self.buffer.append(message)

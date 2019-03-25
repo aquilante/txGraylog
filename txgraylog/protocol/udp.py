@@ -11,7 +11,7 @@
 from collections import deque
 from socket import gethostname
 
-from gelf import GelfProtocol
+from . gelf import GelfProtocol
 from twisted.internet import protocol, reactor
 
 
@@ -73,11 +73,11 @@ class UDPPlainTextProtocol(protocol.DatagramProtocol):
         """ Write the data to socket
         """
         if not self.connected:
-            self.buffer.append(str(message))
+            self.buffer.append(message)
             return
 
         if self.transport:
-            self.transport.write(str(message))
+            self.transport.write(message)
 
     def log_message(self, event):
         """ The method to be called when we want to emit a log activity

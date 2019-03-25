@@ -18,6 +18,14 @@ import struct
 import jsonlib as json
 
 from twisted.python import randbytes
+from twisted.logger._format import formatEvent
+
+try:
+    from constantly import NamedConstant
+    has_constantly = True
+except:
+    has_constantly = False
+    
 
 IGNORE_FIELDS = set(["message", "time", "isError", "system", "id", "failure"])
 WAN_CHUNK, LAN_CHUNK = 1420, 8154
@@ -82,8 +90,8 @@ class GelfProtocol(object):
         """ Property to return back the compressed log paramaters
         """
         params = (
-            zlib.compress(json.dumps(self.log_params))
-            if self._compress else json.dumps(self.log_params)
+            zlib.compress(json.write(self.log_params))
+            if self._compress else json.write(self.log_params)
         )
         return params
 
@@ -96,9 +104,10 @@ class GelfProtocol(object):
             full_message = event['failure'].getTraceback()
         else:
             level = 6
-            short_message = event['message'][0] if event['message'] else ''
-            full_message = ' '.join([str(m) for m in event['message']])
-
+            msg = formatEvent(event)
+            short_message = msg.split('\n')[0]
+            full_message = msg
+            
         self.log_params = {
             'version': event.get('version', ''),
             'host': self.hostname,
@@ -114,22 +123,22 @@ class GelfProtocol(object):
         if 'line' in event:
             self.log_params['line'] = event['line']
 
-        for key, value in event.iteritems():
+        for key, value in event.items():
             if key not in IGNORE_FIELDS:
-                self.log_params["_%s" % (key, )] = value
+                self.log_params["_%s" % (key, )] = str(value)
 
     def _get_chunks(self, compressed):
         """Split the compressed log paramaters into chunks
         """
-        num_chunks = (len(compressed) / self.chunk_size) + 1
+        num_chunks = (len(compressed) // self.chunk_size) + 1
 
         if self.gelf_format == GELF_LEGACY:
             pieces = struct.pack('>H', num_chunks)
             chunk_id = uuid.uuid1().bytes + randbytes.secureRandom(16)
 
-            for i in xrange(num_chunks):
-                chunk = ''.join([
-                    '\x1e\x0f',
+            for i in range(num_chunks):
+                chunk = b''.join([
+                    b'\x1e\x0f',
                     chunk_id,
                     struct.pack('>H', i),
                     pieces,
@@ -143,9 +152,9 @@ class GelfProtocol(object):
             pieces = struct.pack('B', num_chunks)
             chunk_id = randbytes.secureRandom(8)
 
-            for i in xrange(num_chunks):
-                chunk = ''.join([
-                    '\x1e\x0f',
+            for i in range(num_chunks):
+                chunk = b''.join([
+                    b'\x1e\x0f',
                     chunk_id,
                     struct.pack('B', i),
                     pieces,
