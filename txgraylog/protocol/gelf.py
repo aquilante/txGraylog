@@ -125,7 +125,10 @@ class GelfProtocol(object):
 
         for key, value in event.items():
             if key not in IGNORE_FIELDS:
-                self.log_params["_%s" % (key, )] = str(value)
+                if isinstance(value, (str, int, float)):
+                    self.log_params["_%s" % (key, )] = value
+                else:
+                    self.log_params["_%s" % (key, )] = str(value)
 
     def _get_chunks(self, compressed):
         """Split the compressed log paramaters into chunks
