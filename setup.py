@@ -21,8 +21,8 @@ setup(
     license='MIT',
     url='https://github.com/dr4ke616/txGraylog/',
     packages=find_packages(),
-    tests_require=['twisted>=10.2.0', 'coverage', 'jsonlib'],
-    install_requires=['twisted>=10.2.0', 'jsonlib'],
+    tests_require=['twisted>=10.2.0', 'coverage', 'jsonlib-python3'],
+    install_requires=['twisted>=10.2.0', 'jsonlib-python3'],
     requires=['twisted(>=10.2.0)'],
     zip_safe=False,
     classifiers=[
