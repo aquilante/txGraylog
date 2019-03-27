@@ -7,7 +7,7 @@
     :synopsis: The observer for which our protocols to use
 .. moduleauthor:: Adam Drakeford <adamdrakeford@gmail.com>
 """
-from twisted.python import log
+from twisted.logger import LogLevel, globalLogPublisher
 from twisted.internet import reactor
 from twisted.internet.protocol import DatagramProtocol, Protocol
 
@@ -18,8 +18,9 @@ class GraylogObserver:
     """ Graylog observer
     """
 
-    def __init__(self, protocol, host, port):
+    def __init__(self, protocol, host, port, log_level=LogLevel.debug):
         self.protocol = protocol(host, port)
+        self._log_level = log_level
 
         if issubclass(self.protocol.__class__, DatagramProtocol):
             reactor.listenUDP(0, self.protocol)
@@ -33,13 +34,15 @@ class GraylogObserver:
             raise ValueError('Incompatible protocol')
 
     def emit(self, event_dict):
-        self.protocol.log_message(event_dict)
+        if 'log_level' in event_dict and \
+           event_dict['log_level']._index >= self._log_level._index:
+            self.protocol.log_message(event_dict)
 
     def start(self, with_reactor=False):
         if with_reactor:
-            reactor.callWhenRunning(log.addObserver, self.emit)
+            reactor.callWhenRunning(globalLogPublisher.addObserver, self.emit)
         else:
-            log.addObserver(self.emit)
+            globalLogPublisher.addObserver(self.emit)
 
     def stop(self):
-        log.removeObserver(self.emit)
+        globalLogPublisher.removeObserver(self.emit)

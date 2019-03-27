@@ -26,7 +26,7 @@ class TestGELF(unittest.TestCase):
         t = time.time()
         g = GelfProtocol('localhost', **{
             'system': 'protocol',
-            'message': ['this is a log message', 'which could be continued'],
+            'log_format': 'this is a log message\nwhich could be continued',
             'isError': False,
             'version': '1.0',
             'time': t
@@ -40,7 +40,7 @@ class TestGELF(unittest.TestCase):
         self.assertEquals(params['short_message'], 'this is a log message')
         self.assertEquals(
             params['full_message'],
-            'this is a log message' + ' which could be continued'
+            '\n'.join(['this is a log message','which could be continued'])
         )
         self.assertEquals(params['level'], 6)
         self.assertEquals(params['version'], '1.0')
@@ -53,7 +53,7 @@ class TestGELF(unittest.TestCase):
         t = time.time()
         g = GelfProtocol('localhost', **{
             'system': 'protocol',
-            'message': ['this is a log message', 'which could be continued'],
+            'log_format': 'this is a log message\nwhich could be continued',
             'isError': False,
             'version': '1.0',
             'time': t
@@ -66,7 +66,7 @@ class TestGELF(unittest.TestCase):
             self.assertEquals(params['short_message'], 'this is a log message')
             self.assertEquals(
                 params['full_message'],
-                'this is a log message' + ' which could be continued'
+                '\n'.join(['this is a log message','which could be continued'])
             )
             self.assertEquals(params['level'], 6)
             self.assertEquals(params['version'], '1.0')
@@ -118,7 +118,7 @@ class TestGELF(unittest.TestCase):
         g = GelfProtocol('localhost', **{
             'system': 'protocol',
             'isError': False,
-            'message': longMessage,
+            'log_format': longMessage,
             'time': time.time(),
         })
 
@@ -153,7 +153,7 @@ class TestGELF(unittest.TestCase):
         g = GelfProtocol('localhost', size=LAN_CHUNK, **{
             'system': 'protocol',
             'isError': False,
-            'message': longMessage,
+            'log_format': longMessage,
             'time': time.time(),
         })
 
@@ -188,7 +188,7 @@ class TestGELF(unittest.TestCase):
         g = GelfProtocol('host', gelf_fmt=GELF_NEW, **{
                 'system': 'protocol',
                 'isError': False,
-                'message': longMessage,
+                'log_format': longMessage,
                 'time': time.time(),
         })
 
@@ -223,7 +223,7 @@ class TestGELF(unittest.TestCase):
         data = {
             'system': 'protocol',
             'isError': False,
-            'message': longMessage,
+            'log_format': longMessage,
             'time': time.time()
         }
 
@@ -254,12 +254,12 @@ class TestGELF(unittest.TestCase):
         """
 
         longMessage = binascii.hexlify(
-            randbytes.insecureRandom(3000)) + b'more!'
+            randbytes.insecureRandom(6000)) + b'more!'
 
         g = GelfProtocol('localhost', **{
             'system': 'protocol',
             'isError': False,
-            'message': longMessage,
+            'log_format': longMessage,
             'time': time.time(),
         })
 

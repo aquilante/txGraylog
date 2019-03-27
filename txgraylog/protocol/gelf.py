@@ -98,7 +98,7 @@ class GelfProtocol(object):
     def _build_log_params(self, event):
         """ Build up the log paramaters
         """
-        if event['isError'] and 'failure' in event:
+        if 'failure' in event and event['isError']:
             level = 3
             short_message = str(event['failure'].value)
             full_message = event['failure'].getTraceback()
